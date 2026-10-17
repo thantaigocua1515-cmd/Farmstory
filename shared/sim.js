@@ -108,7 +108,7 @@ export function buildBlockers() {
     [2, 2], [44, 3], [45, 16], [3, 33], [20, 4], [28, 30], [44, 28],
     [10, 14], [14, 8], [33, 20], [8, 34], [26, 8],
   ].forEach(([x, y]) => tree(x, y));
-  B.push({ x0: 5, y0: 2, x1: 12, y1: 10, kind: 'house' });    // farmhouse
+  B.push({ x0: 5, y0: 4, x1: 12, y1: 12, kind: 'house' });    // farmhouse
   B.push({ x0: 19, y0: 19, x1: 21, y1: 29, kind: 'tower' });  // silo
   B.push({ x0: 32, y0: 5, x1: 33, y1: 6, kind: 'windmill' }); // windmill
   return B;

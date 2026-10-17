@@ -2,11 +2,12 @@
 import { TILE, MAP_W, MAP_H, T_GRASS, T_PATH, T_WATER, T_FLOWER, CROP_IDS, GROWTH_STAGES } from './shared/sim.js';
 
 const TS_TILE = 16; // source tileset tile size
-// Verified uniform tiles in spr_tileset_sunnysideworld_16px.png (tx, ty)
+// Terrain tiles from the pack's 16px tileset (spr_tileset_sunnysideworld_16px.png):
+// grass = the pack's signature checkerboard pair (as in its example scenes)
+const GRASS_A = [1, 2], GRASS_B = [3, 2];
 const TILE_SRC = {
-  [T_GRASS]: [2, 2],
   [T_WATER]: [4, 1],
-  [T_PATH]: [3, 1],
+  [T_PATH]: [10, 7], // textured dirt path
 };
 const HAIRS = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
 // anim key -> [dir, file suffix]  (verified filenames in the pack)
@@ -50,7 +51,7 @@ export async function createRenderer() {
       await S('tree1', 'assets/Plants/spr_deco_tree_01_strip4.png');
       await S('tree2', 'assets/Plants/spr_deco_tree_02_strip4.png');
       await S('windmill', 'assets/spr_deco_windmill_strip9.png');
-      await L('house', 'assets/Decor/house_red.png');
+      await L('house', 'assets/Decor/house.png');
       await L('tower', 'assets/Decor/tower.png');
       await S('glint', 'assets/VFX/spr_deco_glint_01_strip6.png');
       await L('egg', 'assets/Crops/egg.png');
@@ -109,13 +110,23 @@ export async function createRenderer() {
       const y0 = Math.max(0, Math.floor(camy / TILE) - 1), y1 = Math.min(MAP_H - 1, Math.ceil((camy + viewH) / TILE) + 1);
       const ts = R.imgs.tileset;
 
-      // --- ground tiles ---
+      // --- ground tiles (checkerboard grass + water shoreline rim) ---
       for (let ty = y0; ty <= y1; ty++)
         for (let tx = x0; tx <= x1; tx++) {
           const t = game.map[ty * MAP_W + tx];
-          const src = TILE_SRC[t] || TILE_SRC[T_GRASS];
+          let src = TILE_SRC[t] || GRASS_A;
+          if (t === T_GRASS || t === T_FLOWER) src = ((tx + ty) & 1) ? GRASS_A : GRASS_B;
           ctx.drawImage(ts, src[0] * TS_TILE, src[1] * TS_TILE, TS_TILE, TS_TILE, tx * TILE, ty * TILE, TILE, TILE);
           if (t === T_FLOWER) R.drawFlower(ctx, tx, ty);
+          if (t === T_WATER) {
+            // darker rim where water meets land (like the pack's river)
+            const m = game.map, MW = MAP_W;
+            ctx.fillStyle = 'rgba(8,70,120,0.4)';
+            if (ty > 0 && m[(ty - 1) * MW + tx] !== T_WATER) ctx.fillRect(tx * TILE, ty * TILE, TILE, 5);
+            if (ty < MAP_H - 1 && m[(ty + 1) * MW + tx] !== T_WATER) ctx.fillRect(tx * TILE, (ty + 1) * TILE - 5, TILE, 5);
+            if (tx > 0 && m[ty * MW + tx - 1] !== T_WATER) ctx.fillRect(tx * TILE, ty * TILE, 5, TILE);
+            if (tx < MW - 1 && m[ty * MW + tx + 1] !== T_WATER) ctx.fillRect((tx + 1) * TILE - 5, ty * TILE, 5, TILE);
+          }
         }
 
       // --- farm plots ---
@@ -297,8 +308,8 @@ export async function createRenderer() {
     },
 
     drawHouse(ctx, cx, byy) {
-      const img = R.imgs.house; // 292x306
-      const dw = 131, dh = 138;
+      const img = R.imgs.house; // 330x404 proper farmhouse (from pack's Buildings example)
+      const dw = 150, dh = 184;
       ctx.drawImage(img, Math.round(cx - dw / 2), Math.round(byy - dh), dw, dh);
     },
 
