@@ -1,0 +1,4 @@
+{
+  "buildCommand": "mkdir -p client/js/shared && cp shared/*.js client/js/shared/",
+  "outputDirectory": "client"
+}

@@ -1,0 +1,148 @@
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden; background: #20301c;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+#game {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  display: block;
+}
+.hidden { display: none !important; }
+
+/* ---- HUD ---- */
+#hud {
+  position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 10px;
+  display: flex; gap: 8px; z-index: 5;
+}
+.hud-item {
+  background: rgba(20, 30, 16, 0.72); color: #fff; font-weight: 700;
+  padding: 7px 12px; border-radius: 14px; font-size: 15px;
+  border: 2px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; gap: 4px;
+}
+.hud-item.clock { position: relative; width: 92px; height: 36px; overflow: hidden; padding: 0; justify-content: center; }
+#clockfill { position: absolute; left: 0; top: 0; bottom: 0; width: 30%; background: rgba(255, 210, 80, 0.45); }
+#clockicon { position: relative; z-index: 1; }
+#muteBtn {
+  position: fixed; top: calc(8px + env(safe-area-inset-top)); right: 10px; z-index: 5;
+  width: 42px; height: 42px; border-radius: 50%; font-size: 20px;
+  background: rgba(20,30,16,0.72); border: 2px solid rgba(255,255,255,0.25); color: #fff;
+}
+
+/* ---- Toolbar ---- */
+#toolbar {
+  position: fixed; bottom: calc(10px + env(safe-area-inset-bottom)); left: 50%;
+  transform: translateX(-50%); z-index: 5;
+  display: flex; gap: 8px; align-items: center;
+  background: rgba(20, 30, 16, 0.72); padding: 8px 10px; border-radius: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+}
+.tool {
+  width: 52px; height: 52px; font-size: 26px; border-radius: 14px;
+  background: rgba(255,255,255,0.12); border: 2px solid transparent; color: #fff;
+}
+.tool.sel { background: #ffd94d; border-color: #fff; transform: scale(1.08); }
+#seedpick {
+  color: #fff; font-size: 13px; font-weight: 700; padding: 6px 10px;
+  background: rgba(255,255,255,0.12); border-radius: 10px; white-space: nowrap;
+}
+
+/* ---- Touch controls ---- */
+#touchUI { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+#joyBase {
+  position: fixed; width: 120px; height: 120px; border-radius: 50%;
+  background: rgba(255,255,255,0.14); border: 2px solid rgba(255,255,255,0.35);
+  display: none; pointer-events: none;
+}
+#joyKnob {
+  position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(255,255,255,0.55); transform: translate(-50%, -50%);
+}
+#touchBtns {
+  position: fixed; right: 14px; bottom: calc(92px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+  pointer-events: auto;
+}
+.tbtn {
+  border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+  background: rgba(20, 30, 16, 0.66); color: #fff;
+}
+.tbtn.small { width: 54px; height: 54px; font-size: 24px; }
+.tbtn.big { width: 78px; height: 78px; font-size: 34px; background: rgba(90, 160, 60, 0.8); }
+.tbtn:active { transform: scale(0.92); }
+
+/* ---- Toast ---- */
+#toast {
+  position: fixed; top: 22%; left: 50%; transform: translateX(-50%);
+  background: rgba(20,30,16,0.85); color: #ffe27a; font-weight: 800; font-size: 18px;
+  padding: 10px 18px; border-radius: 14px; z-index: 8; pointer-events: none;
+  border: 2px solid rgba(255,226,122,0.5);
+  animation: toastup 1.6s ease forwards;
+}
+@keyframes toastup {
+  0% { opacity: 0; transform: translate(-50%, 12px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -14px); }
+}
+
+/* ---- Modal / panel ---- */
+.modal {
+  position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.panel {
+  background: #fdf6e3; border-radius: 20px; padding: 20px; max-width: 420px; width: 100%;
+  max-height: 86vh; overflow-y: auto; border: 4px solid #8a5a3b; color: #4a3220;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.panel h1 { font-size: 34px; text-align: center; line-height: 1.25; color: #3f6b1f; }
+.panel h2 { text-align: center; color: #3f6b1f; margin-bottom: 6px; }
+.sub { text-align: center; color: #7a5c3d; margin: 8px 0 14px; font-size: 14px; line-height: 1.5; }
+.hairlabel { text-align: center; font-weight: 700; margin-bottom: 8px; }
+#hairPick { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+#hairPick button {
+  width: 56px; height: 56px; border-radius: 14px; border: 3px solid transparent;
+  background: #e8dcc0; padding: 2px;
+}
+#hairPick button.sel { border-color: #5aa83c; background: #d8ecc0; }
+#hairPick canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+.row { display: flex; gap: 10px; justify-content: center; }
+button.primary {
+  background: #5aa83c; color: #fff; border: none; border-radius: 14px;
+  padding: 12px 22px; font-size: 17px; font-weight: 800;
+}
+button.ghost {
+  background: transparent; color: #5a7a3c; border: 2px solid #5a7a3c; border-radius: 14px;
+  padding: 10px 20px; font-size: 16px; font-weight: 700;
+}
+button.primary:active, button.ghost:active { transform: scale(0.95); }
+.hint { text-align: center; color: #a08860; font-size: 12px; margin-top: 14px; line-height: 1.7; }
+
+.shop-coins { text-align: center; font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.shop-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 4px;
+  border-bottom: 1px dashed #d8c8a8; font-size: 15px;
+}
+.shop-row .nm { flex: 1; font-weight: 700; }
+.shop-row .own { color: #7a5c3d; font-size: 13px; }
+.shop-row button {
+  background: #5aa83c; color: #fff; border: none; border-radius: 10px;
+  padding: 7px 12px; font-weight: 800;
+}
+.shop-row button:disabled { background: #b8a888; }
+#sellAll { width: 100%; margin-top: 12px; }
+#shopClose { width: 100%; margin-top: 8px; }
+
+#startOverlay {
+  position: fixed; inset: 0; z-index: 20;
+  background: linear-gradient(180deg, #8fd0ff 0%, #bfe8a0 60%, #7ec850 100%);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+#loading {
+  position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.6); color: #fff; font-size: 18px; font-weight: 700;
+}
