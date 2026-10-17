@@ -99,17 +99,19 @@ export function buildMap(rng) {
   return map;
 }
 
-// Fixed decoration anchors (client draws trees/windmill here; sim blocks them)
+// Fixed decoration anchors (client draws them; sim blocks them).
+// Rects in tile units, inclusive: { x0, y0, x1, y1, kind }
 export function buildBlockers() {
-  const blocked = [];
-  const trees = [
-    [2, 2], [5, 3], [44, 3], [45, 16], [3, 33], [20, 4], [28, 30], [44, 28],
+  const B = [];
+  const tree = (x, y) => B.push({ x0: x, y0: y, x1: x, y1: y, kind: 'tree' });
+  [
+    [2, 2], [44, 3], [45, 16], [3, 33], [20, 4], [28, 30], [44, 28],
     [10, 14], [14, 8], [33, 20], [8, 34], [26, 8],
-  ];
-  for (const [x, y] of trees) blocked.push({ tx: x, ty: y, kind: 'tree' });
-  blocked.push({ tx: 42, ty: 5, kind: 'windmill' });
-  blocked.push({ tx: 43, ty: 5, kind: 'windmill' });
-  return blocked;
+  ].forEach(([x, y]) => tree(x, y));
+  B.push({ x0: 5, y0: 2, x1: 12, y1: 10, kind: 'house' });    // farmhouse
+  B.push({ x0: 19, y0: 19, x1: 21, y1: 29, kind: 'tower' });  // silo
+  B.push({ x0: 32, y0: 5, x1: 33, y1: 6, kind: 'windmill' }); // windmill
+  return B;
 }
 
 export function createGame(seed = 1234) {
@@ -363,8 +365,9 @@ function collides(game, x, y) {
     if (isBlocked(game.map, Math.floor(px / TILE), Math.floor(py / TILE))) return true;
   }
   for (const b of game.blockers) {
-    const bx = b.tx * TILE + 8, by = b.ty * TILE + 8;
-    if (Math.abs(x - bx) < 14 && Math.abs(y - by) < 12) return true;
+    const bx0 = b.x0 * TILE, by0 = b.y0 * TILE;
+    const bx1 = (b.x1 + 1) * TILE, by1 = (b.y1 + 1) * TILE;
+    if (x + 6 > bx0 && x - 6 < bx1 && y + 4 > by0 && y - 2 < by1) return true;
   }
   return false;
 }

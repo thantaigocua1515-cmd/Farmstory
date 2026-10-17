@@ -50,6 +50,8 @@ export async function createRenderer() {
       await S('tree1', 'assets/Plants/spr_deco_tree_01_strip4.png');
       await S('tree2', 'assets/Plants/spr_deco_tree_02_strip4.png');
       await S('windmill', 'assets/spr_deco_windmill_strip9.png');
+      await L('house', 'assets/Decor/house_red.png');
+      await L('tower', 'assets/Decor/tower.png');
       await S('glint', 'assets/VFX/spr_deco_glint_01_strip6.png');
       await L('egg', 'assets/Crops/egg.png');
       for (const id of CROP_IDS)
@@ -130,18 +132,21 @@ export async function createRenderer() {
         ctx.drawImage(egg, Math.round(e.x - 5), Math.round(e.y - 6), 10, 10);
       }
 
-      // --- y-sorted: trees, windmill, chickens, player ---
+      // --- y-sorted: decor, chickens, player ---
       const ents = [];
       for (const b of game.blockers) {
-        if (b.kind === 'tree') ents.push({ y: b.ty * TILE + 14, kind: 'tree', b });
-        if (b.kind === 'windmill') ents.push({ y: b.ty * TILE + 16, kind: 'windmill', b });
+        const cx = ((b.x0 + b.x1 + 1) / 2) * TILE;
+        const byy = (b.y1 + 1) * TILE;
+        ents.push({ y: byy, kind: b.kind, b, cx, byy });
       }
       game.animals.forEach((a, i) => ents.push({ y: a.y, kind: 'chicken', a, i }));
       ents.push({ y: p.y, kind: 'player' });
       ents.sort((a, b) => a.y - b.y);
       for (const e of ents) {
         if (e.kind === 'tree') R.drawTree(ctx, e.b, timeMs);
-        else if (e.kind === 'windmill') R.drawWindmill(ctx, e.b, timeMs);
+        else if (e.kind === 'windmill') R.drawWindmill(ctx, e.cx, e.byy, timeMs);
+        else if (e.kind === 'house') R.drawHouse(ctx, e.cx, e.byy);
+        else if (e.kind === 'tower') R.drawTower(ctx, e.cx, e.byy);
         else if (e.kind === 'chicken') R.drawChicken(ctx, e.a, e.i, timeMs);
         else R.drawPlayer(ctx, game, timeMs);
       }
@@ -237,7 +242,8 @@ export async function createRenderer() {
       const flip = p.facing < 0;
       R.drawShadow(ctx, p.x, p.y + 2, 12);
       ctx.save();
-      ctx.translate(Math.round(p.x), Math.round(p.y - 54));
+      // sprite feet sit at cell row 38/64 → anchor cell top at p.y - 38
+      ctx.translate(Math.round(p.x), Math.round(p.y - 38));
       if (flip) ctx.scale(-1, 1);
       ctx.drawImage(base.img, f * base.cw, 0, base.cw, base.ch, -48, 0, 96, 64);
       if (hair) ctx.drawImage(hair.img, f * hair.cw, 0, hair.cw, hair.ch, -48, 0, 96, 64);
@@ -249,24 +255,57 @@ export async function createRenderer() {
       const f = Math.floor(timeMs / 220 + i * 2) % c.frames;
       R.drawShadow(ctx, a.x, a.y + 4, 8);
       ctx.save();
-      ctx.translate(Math.round(a.x), Math.round(a.y - 26));
+      // chicken feet at cell row 25/32
+      ctx.translate(Math.round(a.x), Math.round(a.y - 25));
       if (a.flip) ctx.scale(-1, 1);
       ctx.drawImage(c.img, f * c.cw, 0, c.cw, c.ch, -16, 0, 32, 32);
       ctx.restore();
     },
 
     drawTree(ctx, b, timeMs) {
-      const t = (b.tx + b.ty) % 2 === 0 ? R.strips.tree1 : R.strips.tree2;
-      const f = Math.floor(timeMs / 700 + b.tx) % t.frames;
-      const x = b.tx * TILE + 8, y = b.ty * TILE + 14;
+      const t = (b.x0 + b.y0) % 2 === 0 ? R.strips.tree1 : R.strips.tree2;
+      const f = Math.floor(timeMs / 700 + b.x0) % t.frames;
+      const x = b.x0 * TILE + 8, y = (b.y0 + 1) * TILE - 2;
       ctx.drawImage(t.img, f * t.cw, 0, t.cw, t.ch, Math.round(x - 16), Math.round(y - 30), 32, 34);
     },
 
-    drawWindmill(ctx, b, timeMs) {
+    drawWindmill(ctx, cx, byy, timeMs) {
+      // wooden tower (procedural) under the blade hub
+      const topW = 26, botW = 46, h = 100;
+      const tyTop = byy - h;
+      ctx.fillStyle = '#8a5a36';
+      ctx.beginPath();
+      ctx.moveTo(Math.round(cx - topW / 2), tyTop);
+      ctx.lineTo(Math.round(cx + topW / 2), tyTop);
+      ctx.lineTo(Math.round(cx + botW / 2), byy);
+      ctx.lineTo(Math.round(cx - botW / 2), byy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      for (let i = 1; i < 6; i++) {
+        const w = topW + ((botW - topW) * i) / 6;
+        ctx.fillRect(Math.round(cx - w / 2), Math.round(tyTop + (h / 6) * i), Math.round(w), 2);
+      }
+      ctx.fillStyle = '#4a2e18'; // door
+      ctx.fillRect(Math.round(cx - 8), byy - 22, 16, 22);
+      ctx.fillStyle = 'rgba(255,255,255,0.15)'; // roof cap
+      ctx.fillRect(Math.round(cx - topW / 2), tyTop, topW, 5);
+      // rotating blades
       const w = R.strips.windmill;
       const f = Math.floor(timeMs / 160) % w.frames;
-      const x = (b.tx + 0.5) * TILE, y = (b.ty + 1) * TILE;
-      ctx.drawImage(w.img, f * w.cw, 0, w.cw, w.ch, Math.round(x - 56), Math.round(y - 108), 112, 112);
+      ctx.drawImage(w.img, f * w.cw, 0, w.cw, w.ch, Math.round(cx - 56), Math.round(byy - 112), 112, 112);
+    },
+
+    drawHouse(ctx, cx, byy) {
+      const img = R.imgs.house; // 292x306
+      const dw = 131, dh = 138;
+      ctx.drawImage(img, Math.round(cx - dw / 2), Math.round(byy - dh), dw, dh);
+    },
+
+    drawTower(ctx, cx, byy) {
+      const img = R.imgs.tower; // 115x385
+      const dw = 40, dh = 134;
+      ctx.drawImage(img, Math.round(cx - dw / 2), Math.round(byy - dh), dw, dh);
     },
   };
   return R;
