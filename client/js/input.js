@@ -9,18 +9,31 @@ export function createInput(opts) {
   const joyBase = document.getElementById('joyBase');
   const joyKnob = document.getElementById('joyKnob');
 
+  // e.code is the reliable identifier; fall back to e.key for synthetic key
+  // events that don't set code (some automation / test drivers).
+  const KEY_FALLBACK = { ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight', ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ' ': 'Space', Escape: 'Escape' };
+  function normCode(e) {
+    if (e.code) return e.code;
+    if (KEY_FALLBACK[e.key]) return KEY_FALLBACK[e.key];
+    const k = e.key && e.key.length === 1 ? e.key.toUpperCase() : '';
+    if (k >= 'A' && k <= 'Z') return 'Key' + k;
+    if (k >= '0' && k <= '9') return 'Digit' + k;
+    return e.key;
+  }
+
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
-    keys.add(e.code);
-    if (e.code === 'Space' || e.code === 'KeyE') { e.preventDefault(); opts.onAction(); }
-    if (e.code === 'Digit1') opts.onTool('hoe');
-    if (e.code === 'Digit2') opts.onTool('seeds');
-    if (e.code === 'Digit3') opts.onTool('water');
-    if (e.code === 'Digit4') opts.onTool('hand');
-    if (e.code === 'KeyQ') opts.onSeed();
-    if (e.code === 'Escape') opts.onEscape();
+    const code = normCode(e);
+    keys.add(code);
+    if (code === 'Space' || code === 'KeyE') { e.preventDefault(); opts.onAction(); }
+    if (code === 'Digit1') opts.onTool('hoe');
+    if (code === 'Digit2') opts.onTool('seeds');
+    if (code === 'Digit3') opts.onTool('water');
+    if (code === 'Digit4') opts.onTool('hand');
+    if (code === 'KeyQ') opts.onSeed();
+    if (code === 'Escape') opts.onEscape();
   });
-  window.addEventListener('keyup', (e) => keys.delete(e.code));
+  window.addEventListener('keyup', (e) => keys.delete(normCode(e)));
   window.addEventListener('blur', () => keys.clear());
 
   // --- virtual joystick: touches starting on the left half (not on buttons) ---

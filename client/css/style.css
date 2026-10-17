@@ -31,6 +31,11 @@ html, body {
   width: 42px; height: 42px; border-radius: 50%; font-size: 20px;
   background: rgba(20,30,16,0.72); border: 2px solid rgba(255,255,255,0.25); color: #fff;
 }
+#shopBtn {
+  position: fixed; top: calc(8px + env(safe-area-inset-top)); right: 60px; z-index: 5;
+  width: 42px; height: 42px; border-radius: 50%; font-size: 20px;
+  background: rgba(20,30,16,0.72); border: 2px solid rgba(255,255,255,0.25); color: #fff;
+}
 
 /* ---- Toolbar ---- */
 #toolbar {

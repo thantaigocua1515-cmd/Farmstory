@@ -65,7 +65,7 @@ async function startGame(g, hair) {
   await renderer.loadAnimSet(game.player.hair);
   $('loading').classList.add('hidden');
   $('startOverlay').style.display = 'none';
-  for (const id of ['hud', 'toolbar', 'muteBtn']) $(id).classList.remove('hidden');
+  for (const id of ['hud', 'toolbar', 'muteBtn', 'shopBtn']) $(id).classList.remove('hidden');
   if (input.isTouch) $('touchUI').classList.remove('hidden');
   wireToolbar();
   updateHUD();
@@ -169,6 +169,7 @@ function toggleShop(force) {
   if (show) { renderShop(); audio.play('ui'); }
 }
 $('shopClose').addEventListener('click', () => toggleShop(false));
+$('shopBtn').addEventListener('click', () => { if (running) toggleShop(); });
 $('shopModal').addEventListener('click', (e) => { if (e.target.id === 'shopModal') toggleShop(false); });
 
 function renderShop() {
